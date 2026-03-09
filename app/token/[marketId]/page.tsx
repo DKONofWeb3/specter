@@ -149,7 +149,7 @@ export default function TokenPage() {
                 {token.isTrending    && <span className="bdg bdg-hot">HOT</span>}
               </div>
               <div style={{ fontSize: 10, color: "var(--t3)", fontFamily: "var(--mono)", marginTop: 2 }}>
-                {token.pair} · Injective Spot
+                {token.ticker} · Injective Spot
               </div>
             </div>
           </div>
