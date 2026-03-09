@@ -158,7 +158,7 @@ export default function TokenTable({ tokens, filter, search, loading, selected, 
                       {t.isWhaleActive && <span className="bdg bdg-whale">WHALE</span>}
                       {t.isTrending   && <span className="bdg bdg-hot">HOT</span>}
                     </div>
-                    <div style={{ fontSize: 10, color: "var(--t3)", marginTop: 1, fontFamily: "var(--mono)" }}>{t.pair}</div>
+                    <div style={{ fontSize: 10, color: "var(--t3)", marginTop: 1, fontFamily: "var(--mono)" }}>{t.ticker}</div>
                   </div>
                 </div>
               </td>
