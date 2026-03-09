@@ -40,7 +40,7 @@ export async function GET() {
         const quoteDecimals = market.quoteToken?.decimals ?? 6
         const ticker        = market.ticker ?? market.marketId
         const rawTrades     = await fetchTrades(market.marketId)
-        return rawTrades.map((t) => ({
+        return rawTrades.map((t: any) => ({
           wallet:      walletFromSubaccount(t.subaccountId ?? ""),
           side:        t.tradeDirection === "buy" ? "buy" : "sell",
           valueUsd:    normalizePrice(t.price, baseDecimals, quoteDecimals) * normalizeQuantity(t.quantity, baseDecimals),

@@ -71,7 +71,7 @@ export async function GET(
     const bucketMs = resSeconds * 1000
     const buckets  = new Map<number, { o: number; h: number; l: number; c: number; v: number }>()
 
-    for (const t of rawTrades) {
+    for (const t of rawTrades as any[] {
       const ts    = Number(t.executedAt)
       const price = normalizePrice(t.price, baseDecimals, quoteDecimals)
       if (price <= 0) continue
@@ -91,7 +91,7 @@ export async function GET(
 
     const candles = Array.from(buckets.entries())
       .sort(([a], [b]) => a - b)
-      .map(([ts, b]) => ({
+      .map(([ts, b]: [number, any]) => ({
         time:  Math.floor(ts / 1000),
         open:  b.o, high: b.h, low: b.l, close: b.c, value: b.v,
       }))

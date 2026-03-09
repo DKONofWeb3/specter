@@ -37,7 +37,7 @@ export async function GET(
 
     const trades: Trade[] = rawTrades
       .slice(0, 100) // latest 100 trades
-      .map((t) => {
+      .map((t: any) => {
         const price = normalizePrice(t.price, baseDecimals, quoteDecimals)
         const quantity = normalizeQuantity(t.quantity, baseDecimals)
         const valueUsd = price * quantity
@@ -64,7 +64,7 @@ export async function GET(
     return NextResponse.json({
       data: trades,
       timestamp: Date.now(),
-      whaleCount: trades.filter((t) => t.isWhale).length,
+      whaleCount: trades.filter((t: any) => t.isWhale).length,
     })
   } catch (err: any) {
     console.error(`[/api/trades/${marketId}] error:`, err)

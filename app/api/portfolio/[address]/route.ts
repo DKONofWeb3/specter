@@ -67,7 +67,7 @@ export async function GET(
     // Build price map from orderbook mid-prices already computed in /api/markets
     // We skip re-fetching — use known stables + INJ approximation
     const enrichedBalances = balances
-      .map((b) => {
+      .map((b: any) => {
         const known    = KNOWN_DENOMS[b.denom]
         const decimals = known?.decimals ?? 18
         const symbol   = known?.symbol ?? b.denom.split("/").pop()?.toUpperCase() ?? "???"

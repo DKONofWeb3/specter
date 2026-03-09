@@ -86,13 +86,13 @@ export async function GET() {
           const bids = ob.buys ?? []
           const asks = ob.sells ?? []
 
-          bidDepthUsd = bids.reduce((sum, level) => {
+          bidDepthUsd = bids.reduce((sum: number, level: any) => {
             const p = normalizePrice(level.price, baseDecimals, quoteDecimals)
             const q = normalizeQuantity(level.quantity, baseDecimals)
             return sum + p * q
           }, 0)
 
-          askDepthUsd = asks.reduce((sum, level) => {
+          askDepthUsd = asks.reduce((sum: number, level: any) => {
             const p = normalizePrice(level.price, baseDecimals, quoteDecimals)
             const q = normalizeQuantity(level.quantity, baseDecimals)
             return sum + p * q
@@ -118,7 +118,7 @@ export async function GET() {
           )
 
           // Volume
-          volume24hUsd = recentTrades.reduce((sum, t) => {
+          volume24hUsd = recentTrades.reduce((sum: number, t: any) => {
             const p = normalizePrice(t.price, baseDecimals, quoteDecimals)
             const q = normalizeQuantity(t.quantity, baseDecimals)
             return sum + p * q
