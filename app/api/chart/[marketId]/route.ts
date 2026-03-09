@@ -91,6 +91,7 @@ export async function GET() {
           const recentTrades = trades.filter(
             (t: any) => Number(t.executedAt) >= oneDayAgo
           )
+          
 
           volume24hUsd = recentTrades.reduce((sum: number, t: any) => {
             const p = normalizePrice(t.price, baseDecimals, quoteDecimals)
