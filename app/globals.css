@@ -1,26 +1,212 @@
-@import "tailwindcss";
+/* app/globals.css */
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@300;400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --inj:       #0B5CFF;
+  --inj-light: #3a7fff;
+  --inj-dim:   rgba(11,92,255,.12);
+  --inj-bdr:   rgba(11,92,255,.28);
+  --inj-glow:  rgba(11,92,255,.22);
+
+  --bg:  #080a0f;
+  --s1:  #0d1017;
+  --s2:  #111520;
+  --s3:  #161b28;
+  --s4:  #1c2233;
+  --s5:  #222840;
+
+  --b1:  rgba(255,255,255,.06);
+  --b2:  rgba(255,255,255,.1);
+  --b3:  rgba(255,255,255,.16);
+
+  --g:   #00c27a;
+  --r:   #f03e5e;
+  --y:   #f5b731;
+  --bl:  #38bdf8;
+
+  --t1:  #edf0ff;
+  --t2:  #8892b8;
+  --t3:  #434d6e;
+
+  --font: 'Geist', system-ui, sans-serif;
+  --mono: 'Geist Mono', monospace;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+html { scroll-behavior: smooth; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--t1);
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 90% 50% at -5% -5%, rgba(11,92,255,.1) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 60% at 105% 105%, rgba(11,92,255,.07) 0%, transparent 55%);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--s4) transparent;
+}
+*::-webkit-scrollbar       { width: 3px; height: 3px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: var(--s4); border-radius: 3px; }
+
+/* ── TYPOGRAPHY ── */
+.font-display { font-family: 'Geist', sans-serif; }
+.font-mono    { font-family: 'Geist Mono', monospace; }
+
+/* ── UTILITY COLORS ── */
+.up  { color: var(--g); }
+.dn  { color: var(--r); }
+.inj { color: var(--inj-light); }
+
+/* ── CARD ── */
+.card  { background: var(--s1); border: 1px solid var(--b1); border-radius: 10px; }
+.card2 { background: var(--s2); border: 1px solid var(--b1); border-radius: 10px; }
+.card3 { background: var(--s3); border: 1px solid var(--b1); border-radius: 8px; }
+
+/* ── BADGE ── */
+.bdg {
+  font-size: 8px; font-weight: 700;
+  padding: 1px 5px; border-radius: 3px;
+  letter-spacing: .07em; font-family: var(--mono);
+}
+.bdg-new   { background: rgba(56,189,248,.1);  color: var(--bl); border: 1px solid rgba(56,189,248,.22); }
+.bdg-whale { background: rgba(245,183,49,.1);  color: var(--y);  border: 1px solid rgba(245,183,49,.2); }
+.bdg-hot   { background: rgba(240,62,94,.1);   color: #ff7090;   border: 1px solid rgba(240,62,94,.2); }
+.bdg-safe  { background: rgba(0,194,122,.1);   color: var(--g);  border: 1px solid rgba(0,194,122,.2); }
+.bdg-low   { background: rgba(245,183,49,.1);  color: var(--y);  border: 1px solid rgba(245,183,49,.2); }
+.bdg-med   { background: rgba(251,146,60,.1);  color: #fb923c;   border: 1px solid rgba(251,146,60,.2); }
+.bdg-high  { background: rgba(240,62,94,.1);   color: var(--r);  border: 1px solid rgba(240,62,94,.2); }
+
+/* ── CHIP ── */
+.chip {
+  background: transparent; border: 1px solid var(--b2);
+  color: var(--t3); border-radius: 20px;
+  padding: 3px 12px; font-size: 11px; font-weight: 500;
+  cursor: pointer; font-family: var(--font); transition: all .12s;
+  white-space: nowrap;
+}
+.chip:hover { border-color: var(--inj-light); color: var(--inj-light); }
+.chip.active {
+  background: var(--inj-dim);
+  border-color: var(--inj-bdr);
+  color: #7aabff;
+}
+
+/* ── BUTTON ── */
+.btn-primary {
+  background: var(--inj); color: #fff;
+  border: none; border-radius: 8px;
+  padding: 7px 16px; font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: var(--font);
+  box-shadow: 0 4px 18px var(--inj-glow);
+  transition: opacity .12s, transform .12s; letter-spacing: .03em;
+}
+.btn-primary:hover { opacity: .88; transform: translateY(-1px); }
+
+.btn-ghost {
+  background: transparent; border: 1px solid var(--b2);
+  color: var(--t3); border-radius: 8px;
+  padding: 6px 14px; font-size: 11px;
+  cursor: pointer; font-family: var(--font); transition: all .12s;
+}
+.btn-ghost:hover { border-color: var(--inj-light); color: var(--inj-light); }
+
+/* ── LIVE DOT ── */
+.live-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--g); box-shadow: 0 0 7px var(--g);
+  flex-shrink: 0; animation: blink 2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100% { opacity:1; } 50% { opacity:.2; } }
+
+/* ── RISK BAR ── */
+.risk-track { width: 40px; height: 3px; background: rgba(255,255,255,.07); border-radius: 3px; overflow: hidden; }
+.risk-fill  { height: 100%; border-radius: 3px; transition: width .4s; }
+
+/* ── SKELETON ── */
+.skeleton {
+  background: linear-gradient(90deg, var(--s2) 25%, var(--s3) 50%, var(--s2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ── TABLE ── */
+.specter-table { width: 100%; border-collapse: collapse; }
+.specter-table thead {
+  position: sticky; top: 0; z-index: 5;
+  background: var(--bg);
+}
+.specter-table th {
+  padding: 8px 10px;
+  font-size: 10px; font-weight: 600; color: var(--t3);
+  text-align: right; letter-spacing: .1em;
+  border-bottom: 1px solid var(--b1);
+  white-space: nowrap; cursor: pointer;
+  font-family: var(--mono); transition: color .12s;
+  user-select: none;
+}
+.specter-table th:hover { color: var(--t1); }
+.specter-table th:first-child { text-align: left; padding-left: 14px; }
+.specter-table th.sorted { color: var(--inj-light); }
+
+.specter-table tbody tr {
+  border-bottom: 1px solid rgba(255,255,255,.025);
+  cursor: pointer; transition: background .08s;
+}
+.specter-table tbody tr:hover  { background: rgba(255,255,255,.03); }
+.specter-table tbody tr.active { background: rgba(11,92,255,.08); border-color: rgba(11,92,255,.15); }
+
+.specter-table td {
+  padding: 0 10px; height: 50px;
+  text-align: right; vertical-align: middle; white-space: nowrap;
+}
+.specter-table td:first-child { text-align: left; padding-left: 14px; }
+
+/* ── ORDERBOOK ── */
+.ob-row {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  padding: 4px 12px; position: relative; cursor: pointer;
+}
+.ob-row:hover { background: rgba(255,255,255,.025); }
+.ob-bg { position: absolute; top: 0; bottom: 0; right: 0; opacity: .09; pointer-events: none; }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: fadeUp .25s ease both; }
+
+/* ── TICKER ── */
+@keyframes ticker { to { transform: translateX(-50%); } }
+
+/* ── MOBILE ── */
+@media (max-width: 768px) {
+  .hide-mobile { display: none !important; }
+  .show-mobile { display: flex !important; }
+}
+@media (min-width: 769px) {
+  .show-mobile { display: none !important; }
 }

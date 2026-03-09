@@ -9,6 +9,11 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@injectivelabs/networks": "^1.18.7",
+    "@injectivelabs/sdk-ts": "^1.18.7",
+    "buffer": "^6.0.3",
+    "d3": "^7.9.0",
+    "lightweight-charts": "^5.1.0",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3"
@@ -21,6 +26,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }
