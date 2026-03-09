@@ -74,10 +74,10 @@ export async function GET() {
     }
 
     const traders: TraderStats[] = []
-    for (const [wallet, s] of walletMap.entries()) {
+    for (const [wallet, s] of Array.from(walletMap.entries())) {
       if (s.tradeCount < 3) continue
       let topToken = "N/A", topCount = 0
-      for (const [ticker, count] of s.tokenCounts.entries()) {
+      for (const [ticker, count] of Array.from(s.tokenCounts.entries())) {
         if (count > topCount) { topToken = ticker.split("/")[0]; topCount = count }
       }
       traders.push({
