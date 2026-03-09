@@ -92,7 +92,7 @@ export async function GET(
 
     let recentTrades: any[] = []
     try {
-      const result = await spotApi.fetchTrades({ subaccountId, limit: 50 })
+      const result = await spotApi.fetchTrades({ subaccountId, pagination: { limit: 50 } })
       recentTrades = (result as any).trades ?? result ?? []
     } catch (e) {
       console.warn("[portfolio] fetchTrades failed:", (e as any)?.message)
