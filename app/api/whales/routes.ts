@@ -1,18 +1,9 @@
 // app/api/whales/route.ts
 import { NextResponse } from "next/server"
-import {
-  fetchAllMarkets,
-  fetchTrades,
-  normalizePrice,
-  normalizeQuantity,
-  walletFromSubaccount,
-  WHALE_THRESHOLD_USD,
-} from "@/lib/injective"
-import type { WhaleTx } from "@/lib/types"
+import { fetchAllMarkets, fetchTrades, normalizePrice, normalizeQuantity, walletFromSubaccount, WHALE_THRESHOLD_USD } from "@/lib/injective"
 
 const CACHE_MS = 20_000
-let cache: { data: WhaleTx[]; timestamp: number } | null = null
-const MARKETS_TO_SCAN = 20
+let cache: { data: any[]; timestamp: number } | null = null
 
 export async function GET() {
   try {
@@ -21,22 +12,22 @@ export async function GET() {
     }
 
     const allMarkets = await fetchAllMarkets()
-    const topMarkets = allMarkets.slice(0, MARKETS_TO_SCAN)
+    const topMarkets = allMarkets.slice(0, 20)
+    const oneHourAgo = Date.now() - 60 * 60 * 1000
 
     const tradeResults = await Promise.allSettled(
       topMarkets.map(async (market) => {
-        const baseDecimals  = market.baseToken?.decimals ?? 18
+        const baseDecimals  = market.baseToken?.decimals  ?? 18
         const quoteDecimals = market.quoteToken?.decimals ?? 6
         const ticker        = market.ticker ?? market.marketId
-        const rawTrades     = await fetchTrades(market.marketId)
-        const oneHourAgo    = Date.now() - 60 * 60 * 1000
+        const rawTrades: any[] = await fetchTrades(market.marketId)
+        const result: any[] = []
 
-        const result: WhaleTx[] = []
         for (const t of rawTrades) {
           if (Number(t.executedAt) < oneHourAgo) continue
-          const price     = normalizePrice(t.price, baseDecimals, quoteDecimals)
-          const quantity  = normalizeQuantity(t.quantity, baseDecimals)
-          const valueUsd  = price * quantity
+          const price    = normalizePrice(t.price, baseDecimals, quoteDecimals)
+          const quantity = normalizeQuantity(t.quantity, baseDecimals)
+          const valueUsd = price * quantity
           if (valueUsd < WHALE_THRESHOLD_USD) continue
           result.push({
             tradeId:       t.tradeId ?? `${market.marketId}-${t.executedAt}`,
@@ -55,11 +46,11 @@ export async function GET() {
       })
     )
 
-    const whaleTxs: WhaleTx[] = []
+    const whaleTxs: any[] = []
     for (const r of tradeResults) {
       if (r.status === "fulfilled") whaleTxs.push(...r.value)
     }
-    whaleTxs.sort((a, b) => b.valueUsd - a.valueUsd)
+    whaleTxs.sort((a: any, b: any) => b.valueUsd - a.valueUsd)
 
     const data = whaleTxs.slice(0, 100)
     cache = { data, timestamp: Date.now() }

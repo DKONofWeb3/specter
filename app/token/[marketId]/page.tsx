@@ -160,7 +160,7 @@ export default function TokenPage() {
               {fPrice(token.price)}
             </div>
             <div style={{ fontSize: 13, fontWeight: 600, fontFamily: "var(--mono)", color: up ? "var(--g)" : "var(--r)", marginTop: 1 }}>
-              {up ? "+" : ""}{token.priceChange24h.toFixed(2)}% (24h)
+              {up ? "+" : ""}{(token.priceChange24h ?? 0).toFixed(2)}% (24h)
             </div>
           </div>
         </div>
@@ -170,8 +170,8 @@ export default function TokenPage() {
           {[
             { l: "24H VOLUME",  v: fUsd(token.volume24h),  vc: "var(--t1)" },
             { l: "LIQUIDITY",   v: fUsd(token.liquidity),   vc: "var(--t1)" },
-            { l: "MAKER FEE",   v: (parseFloat(token.makerFee) * 100).toFixed(3) + "%", vc: "var(--t2)" },
-            { l: "TAKER FEE",   v: (parseFloat(token.takerFee) * 100).toFixed(3) + "%", vc: "var(--t2)" },
+            { l: "MAKER FEE",   v: (parseFloat(token.makerFee ?? "0") * 100).toFixed(3) + "%", vc: "var(--t2)" },
+            { l: "TAKER FEE",   v: (parseFloat(token.takerFee ?? "0") * 100).toFixed(3) + "%", vc: "var(--t2)" },
             { l: "RISK SCORE",  v: `${token.riskScore}/100`, vc: rc },
             { l: "WHALE",       v: token.isWhaleActive ? "Detected" : "None", vc: token.isWhaleActive ? "var(--y)" : "var(--t3)" },
           ].map((s, i, arr) => (
@@ -307,8 +307,8 @@ export default function TokenPage() {
               { l: "STATUS",     v: token.marketStatus.toUpperCase(), vc: "var(--g)" },
               { l: "BASE",       v: token.baseSymbol,   vc: "var(--t1)" },
               { l: "QUOTE",      v: token.quoteSymbol,  vc: "var(--t1)" },
-              { l: "MAKER FEE",  v: (parseFloat(token.makerFee) * 100).toFixed(3) + "%", vc: "var(--t2)" },
-              { l: "TAKER FEE",  v: (parseFloat(token.takerFee) * 100).toFixed(3) + "%", vc: "var(--t2)" },
+              { l: "MAKER FEE",  v: (parseFloat(token.makerFee ?? "0") * 100).toFixed(3) + "%", vc: "var(--t2)" },
+              { l: "TAKER FEE",  v: (parseFloat(token.takerFee ?? "0") * 100).toFixed(3) + "%", vc: "var(--t2)" },
             ].map((s, i) => (
               <div key={i} style={{
                 display: "flex", justifyContent: "space-between", alignItems: "center",
