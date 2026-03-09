@@ -15,7 +15,7 @@ export async function GET(
     const resolution = searchParams.get("resolution") ?? "60"
     const limit      = parseInt(searchParams.get("limit") ?? "200")
     const ticker     = searchParams.get("ticker") ?? ""
-    const { marketId } = await params          // ← Next.js 15: must await
+    const { marketId } = await params
 
     if (!ticker) {
       return NextResponse.json({ error: "ticker param required" }, { status: 400 })
@@ -35,7 +35,7 @@ export async function GET(
     const resSeconds = res === "D" ? 86400 : parseInt(res) * 60
     const from       = now - resSeconds * limit
 
-    // ── Try Chronos first ───────────────────────────────────
+    // Try Chronos first
     try {
       const url  = `${CHRONOS_BASE}/api/chronos/v1/history?symbol=${encodeURIComponent(ticker)}&resolution=${res}&from=${from}&to=${now}`
       const resp = await fetch(url, { signal: AbortSignal.timeout(6000) })
@@ -54,8 +54,7 @@ export async function GET(
       // Chronos unavailable — fall through to trade-based fallback
     }
 
-    // ── Fallback: build OHLCV from raw trades ───────────────
-    // Fetch market decimals + recent trades
+    // Fallback: build OHLCV from raw trades
     const [market, rawTrades] = await Promise.all([
       fetchMarket(marketId),
       fetchTrades(marketId),
@@ -67,16 +66,15 @@ export async function GET(
       return NextResponse.json({ data: [], cached: false, source: "none" })
     }
 
-    // Bucket trades into candles by resolution
     const bucketMs = resSeconds * 1000
     const buckets  = new Map<number, { o: number; h: number; l: number; c: number; v: number }>()
 
     const trades: any[] = rawTrades
     for (const t of trades) {
-      const ts    = Number(t.executedAt)
-      const price = normalizePrice(t.price, baseDecimals, quoteDecimals)
+      const ts     = Number(t.executedAt)
+      const price  = normalizePrice(t.price, baseDecimals, quoteDecimals)
       if (price <= 0) continue
-      const qty   = parseFloat(t.quantity) / Math.pow(10, baseDecimals)
+      const qty    = parseFloat(t.quantity) / Math.pow(10, baseDecimals)
       const bucket = Math.floor(ts / bucketMs) * bucketMs
 
       if (!buckets.has(bucket)) {
