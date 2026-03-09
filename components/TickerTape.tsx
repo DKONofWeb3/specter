@@ -51,7 +51,7 @@ export default function TickerTape({ tokens }: { tokens: SpectерToken[] }) {
               <span style={{ color: "var(--t3)" }}>{t.ticker}</span>
               <span style={{ color: "var(--t1)", fontWeight: 500 }}>{fPrice(t.price)}</span>
               <span style={{ color: up ? "var(--g)" : "var(--r)", fontWeight: 600 }}>
-                {up ? "+" : ""}{t.priceChange24h.toFixed(2)}%
+                {up ? "+" : ""}{(t.priceChange24h ?? 0).toFixed(2)}%
               </span>
             </div>
           )

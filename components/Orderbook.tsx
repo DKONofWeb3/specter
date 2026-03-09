@@ -64,7 +64,7 @@ export default function Orderbook({ marketId, ticker }: { marketId: string; tick
               {fPrice(level.price)}
             </span>
             <span style={{ fontSize: 11, color: "var(--t2)", textAlign: "center", zIndex: 1, fontFamily: "var(--mono)" }}>
-              {level.quantity.toFixed(2)}
+              {(level.quantity ?? 0).toFixed(2)}
             </span>
             <span style={{ fontSize: 11, color: "var(--t3)", textAlign: "right", zIndex: 1, fontFamily: "var(--mono)" }}>
               {fUsd(level.totalUsd)}
@@ -96,7 +96,7 @@ export default function Orderbook({ marketId, ticker }: { marketId: string; tick
               {fPrice(level.price)}
             </span>
             <span style={{ fontSize: 11, color: "var(--t2)", textAlign: "center", zIndex: 1, fontFamily: "var(--mono)" }}>
-              {level.quantity.toFixed(2)}
+              {(level.quantity ?? 0).toFixed(2)}
             </span>
             <span style={{ fontSize: 11, color: "var(--t3)", textAlign: "right", zIndex: 1, fontFamily: "var(--mono)" }}>
               {fUsd(level.totalUsd)}
@@ -115,8 +115,8 @@ export default function Orderbook({ marketId, ticker }: { marketId: string; tick
           <div style={{ flex: 1, background: "linear-gradient(to left, var(--r), rgba(240,62,94,.35))" }} />
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 5, fontSize: 10, fontFamily: "var(--mono)" }}>
-          <span style={{ color: "var(--g)" }}>BID {ob.depthRatioBid.toFixed(0)}%</span>
-          <span style={{ color: "var(--r)" }}>ASK {(100 - ob.depthRatioBid).toFixed(0)}%</span>
+          <span style={{ color: "var(--g)" }}>BID {(ob.depthRatioBid ?? 0).toFixed(0)}%</span>
+          <span style={{ color: "var(--r)" }}>ASK {(100 - (ob.depthRatioBid ?? 0)).toFixed(0)}%</span>
         </div>
       </div>
     </div>
