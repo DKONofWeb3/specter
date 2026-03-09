@@ -142,7 +142,7 @@ export default function PriceChart({ marketId, ticker, price, change24h }: Props
         priceScaleId: "volume",
       }
       if ((lc as any).HistogramSeries) {
-        volSeries = chart.addSeries((lc as any).HistogramSeries, volOpts)
+        volSeries = chart.addSeries((lc as any).HistogramSeries, volOpts as any)
       } else {
         volSeries = (chart as any).addHistogramSeries(volOpts)
       }
