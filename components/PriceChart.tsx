@@ -100,10 +100,9 @@ export default function PriceChart({ marketId, ticker, price, change24h }: Props
           vertLine: { color: "rgba(11,92,255,.5)", width: 1, style: 0 },
           horzLine: { color: "rgba(11,92,255,.5)", width: 1, style: 0 },
         },
-        rightPriceScale: { borderColor: "rgba(255,255,255,.06)", textColor: "#8892b8" },
+        rightPriceScale: { borderColor: "rgba(255,255,255,.06)" },
         timeScale: {
           borderColor:    "rgba(255,255,255,.06)",
-          textColor:      "#8892b8",
           timeVisible:    true,
           secondsVisible: false,
         },
