@@ -147,7 +147,7 @@ export default function DiscoverPage() {
                         {token.isWhaleActive && <span className="bdg bdg-whale">WHALE</span>}
                         {token.isTrending    && <span className="bdg bdg-hot">HOT</span>}
                       </div>
-                      <div style={{ fontSize: 10, color: "var(--t3)", fontFamily: "var(--mono)", marginTop: 1 }}>{token.pair}</div>
+                      <div style={{ fontSize: 10, color: "var(--t3)", fontFamily: "var(--mono)", marginTop: 1 }}>{token.ticker}</div>
                     </div>
                   </div>
                   <button
