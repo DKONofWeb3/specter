@@ -421,4 +421,8 @@ function TradersPanel({ traders }: { traders: TraderStats[] }) {
           }}>
             {t.winRate}%
           </div>
-        </div
+        </div>
+      ))}
+    </div>
+  )
+}
