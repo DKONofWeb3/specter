@@ -128,7 +128,7 @@ export default function PriceChart({ marketId, ticker, price, change24h }: Props
       let candleSeries: any
       if ((lc as any).CandlestickSeries) {
         // v5
-        candleSeries = chart.addSeries((lc as any).CandlestickSeries, candleOpts)
+        candleSeries = chart.addSeries((lc as any).CandlestickSeries, candleOpts as any)
       } else {
         // v4
         candleSeries = (chart as any).addCandlestickSeries(candleOpts)
