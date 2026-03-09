@@ -71,7 +71,8 @@ export async function GET(
     const bucketMs = resSeconds * 1000
     const buckets  = new Map<number, { o: number; h: number; l: number; c: number; v: number }>()
 
-    for (const t of (rawTrades as any[]) {
+    const trades: any[] = rawTrades
+    for (const t of trades) {
       const ts    = Number(t.executedAt)
       const price = normalizePrice(t.price, baseDecimals, quoteDecimals)
       if (price <= 0) continue
