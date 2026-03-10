@@ -152,11 +152,17 @@ export default function PriceChart({ marketId, ticker, price, change24h }: Props
       })
 
       // ── Set data ───────────────────────────────────────────
-      candleSeries.setData(candles)
-      volSeries.setData(candles.map((c) => ({
+      // Filter out malformed candles that would crash lightweight-charts
+      const validCandles = candles.filter((c) =>
+        c && c.time && isFinite(c.time) && c.time > 0 &&
+        isFinite(c.open) && isFinite(c.high) && isFinite(c.low) && isFinite(c.close)
+      )
+      if (validCandles.length === 0) { setLoading(false); return }
+      candleSeries.setData(validCandles)
+      volSeries.setData(validCandles.map((c) => ({
         time:  c.time,
-        value: c.value,
-        color: c.close >= c.open ? "rgba(0,194,122,.2)" : "rgba(240,62,94,.2)",
+        value: c.value ?? 0,
+        color: (c.close ?? 0) >= (c.open ?? 0) ? "rgba(0,194,122,.2)" : "rgba(240,62,94,.2)",
       })))
 
       chart.timeScale().fitContent()
