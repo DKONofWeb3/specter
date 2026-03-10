@@ -1,28 +1,20 @@
-// app/token/[marketId]/page.tsx
+// app/page.tsx
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { useParams, useRouter } from "next/navigation"
-import dynamic from "next/dynamic"
+import { useRouter } from "next/navigation"
 import type { SpectерToken, TraderStats } from "@/lib/types"
 import { fPrice, fUsd, fWallet, fTimeAgo, riskColor } from "@/lib/format"
+import TickerTape from "@/components/TickerTape"
+import StatsBar   from "@/components/StatsBar"
+import FilterBar  from "@/components/FilterBar"
+import type { FilterType } from "@/components/FilterBar"
+import TokenTable from "@/components/TokenTable"
+import BubbleMap  from "@/components/BubbleMap"
 import Orderbook  from "@/components/Orderbook"
 import TradesFeed from "@/components/TradesFeed"
 
-// Chart loads client-only (lightweight-charts touches DOM)
-const PriceChart = dynamic(() => import("@/components/PriceChart"), {
-  ssr: false,
-  loading: () => (
-    <div style={{
-      display: "flex", alignItems: "center", justifyContent: "center",
-      height: "100%", color: "var(--t3)", fontSize: 11, fontFamily: "var(--mono)",
-    }}>
-      Loading chart…
-    </div>
-  ),
-})
-
-type Tab = "chart" | "orderbook" | "trades" | "traders"
+type RightTab = "orderbook" | "trades" | "traders" | "bubbles"
 
 function tokenColor(sym: string): string {
   const c = ["#0B5CFF","#3a7fff","#00c27a","#38bdf8","#f03e5e","#f5b731","#fb923c","#a78bfa","#10b981","#6366f1"]
@@ -30,381 +22,295 @@ function tokenColor(sym: string): string {
   return c[Math.abs(h) % c.length]
 }
 
-export default function TokenPage() {
-  const params   = useParams()
-  const router   = useRouter()
-  const marketId = decodeURIComponent(params.marketId as string)
+export default function DiscoverPage() {
+  const router  = useRouter()
+  const [tokens,   setTokens]   = useState<SpectерToken[]>([])
+  const [loading,  setLoading]  = useState(true)
+  const [error,    setError]    = useState<string | null>(null)
+  const [filter,   setFilter]   = useState<FilterType>("all")
+  const [search,   setSearch]   = useState("")
+  const [selected, setSelected] = useState<string>("")
+  const [tab,      setTab]      = useState<RightTab>("orderbook")
+  const [traders,  setTraders]  = useState<TraderStats[]>([])
+  const [lastUpd,  setLastUpd]  = useState<Date | null>(null)
 
-  const [token,   setToken]   = useState<SpectерToken | null>(null)
-  const [traders, setTraders] = useState<TraderStats[]>([])
-  const [tab,     setTab]     = useState<Tab>("chart")
-  const [loading, setLoading] = useState(true)
-  const [error,   setError]   = useState<string | null>(null)
-
-  const fetchToken = useCallback(async () => {
+  const fetchMarkets = useCallback(async () => {
     try {
       const res  = await fetch("/api/markets")
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const json = await res.json()
-      const found = (json.data as SpectерToken[])?.find((t) => t.marketId === marketId)
-      if (found) { setToken(found); setError(null) }
-      else setError("Market not found")
-    } catch (e: any) {
-      setError(e.message ?? "Failed to load market")
+      if (json.data) {
+        setTokens(json.data)
+        setLastUpd(new Date())
+        setError(null)
+        if (!selected && json.data.length > 0) setSelected(json.data[0].marketId)
+      }
+    } catch (err: any) {
+      setError(err.message ?? "Failed to load")
     } finally { setLoading(false) }
-  }, [marketId])
+  }, [selected])
 
   const fetchTraders = useCallback(async () => {
     try {
       const res  = await fetch("/api/traders")
       const json = await res.json()
-      setTraders((json.data as TraderStats[])?.slice(0, 30) ?? [])
+      setTraders((json.data as TraderStats[])?.slice(0, 20) ?? [])
     } catch (e) { console.error(e) }
   }, [])
 
   useEffect(() => {
-    fetchToken(); fetchTraders()
-    const id = setInterval(fetchToken, 30_000)
+    fetchMarkets(); fetchTraders()
+    const id = setInterval(() => { fetchMarkets(); fetchTraders() }, 30_000)
     return () => clearInterval(id)
-  }, [fetchToken, fetchTraders])
+  }, []) // eslint-disable-line
 
-  // ── Loading ─────────────────────────────────────────────────
-  if (loading) return (
-    <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <div className="skeleton" style={{ width: 38, height: 38, borderRadius: 9 }} />
-        <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-          <div className="skeleton" style={{ width: 120, height: 18 }} />
-          <div className="skeleton" style={{ width: 80, height: 12 }} />
-        </div>
-      </div>
-      <div className="skeleton" style={{ width: 200, height: 38 }} />
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
-        {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: 64 }} />)}
-      </div>
-      <div className="skeleton" style={{ height: 420, borderRadius: 8 }} />
-    </div>
-  )
+  const token = tokens.find((t) => t.marketId === selected)
 
-  // ── Error ───────────────────────────────────────────────────
-  if (error || !token) return (
-    <div style={{
-      display: "flex", flexDirection: "column",
-      alignItems: "center", justifyContent: "center",
-      height: "calc(100vh - 52px)", gap: 12,
-    }}>
-      <div style={{ fontSize: 13, color: "var(--r)" }}>{error ?? "Token not found"}</div>
-      <div style={{ display: "flex", gap: 8 }}>
-        <button className="btn-ghost" onClick={() => { setError(null); setLoading(true); fetchToken() }}>
-          Retry
-        </button>
-        <button className="btn-primary" onClick={() => router.push("/")}>
-          Back to Discover
-        </button>
-      </div>
-    </div>
-  )
+  const visibleTokens = tokens.filter((t) => {
+    const fok = filter === "all" ? true : filter === "new" ? t.isNew : filter === "whale" ? t.isWhaleActive : filter === "hot" ? t.isTrending : t.riskScore >= 75
+    const sok = !search || t.baseSymbol.toLowerCase().includes(search.toLowerCase()) || t.ticker.toLowerCase().includes(search.toLowerCase())
+    return fok && sok
+  })
 
-  const up  = token.priceChange24h >= 0
-  const rc  = riskColor(token.riskScore)
-  const rlbl = token.riskScore >= 75 ? "HIGH" : token.riskScore >= 50 ? "MED" : token.riskScore >= 25 ? "LOW" : "SAFE"
-  const col  = tokenColor(token.baseSymbol)
-
-  const TABS: { key: Tab; label: string }[] = [
-    { key: "chart",     label: "Chart" },
-    { key: "orderbook", label: "Orderbook" },
-    { key: "trades",    label: "Trades" },
-    { key: "traders",   label: "Traders" },
-  ]
+  function handleSelect(marketId: string) {
+    // Desktop: open in right panel. Mobile: navigate to full page
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      router.push(`/token/${encodeURIComponent(marketId)}`)
+    } else {
+      setSelected(marketId)
+    }
+  }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 52px)", overflow: "hidden" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 52px)" }}>
+      <TickerTape tokens={tokens} />
+      <StatsBar   tokens={tokens} />
+      <FilterBar  filter={filter} search={search} onFilter={setFilter} onSearch={setSearch} />
 
-      {/* ── TOP STRIP: identity + price + stats ─────────────── */}
-      <div style={{
-        padding: "12px 20px", borderBottom: "1px solid var(--b1)",
-        background: "var(--s1)", flexShrink: 0,
-      }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-
-          {/* Left: token identity */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <button onClick={() => router.push("/")} className="btn-ghost" style={{ fontSize: 11 }}>
-              Back
-            </button>
-            <div style={{
-              width: 40, height: 40, borderRadius: 10, flexShrink: 0,
-              background: `${col}20`, color: col, border: `1.5px solid ${col}40`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 16, fontWeight: 800,
-            }}>
-              {token.baseSymbol[0]}
-            </div>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 20, fontWeight: 800, color: "#fff" }}>{token.baseSymbol}</span>
-                <span style={{ fontSize: 12, color: "var(--t3)", fontFamily: "var(--mono)" }}>/ {token.quoteSymbol}</span>
-                {token.isNew         && <span className="bdg bdg-new">NEW</span>}
-                {token.isWhaleActive && <span className="bdg bdg-whale">WHALE</span>}
-                {token.isTrending    && <span className="bdg bdg-hot">HOT</span>}
-              </div>
-              <div style={{ fontSize: 10, color: "var(--t3)", fontFamily: "var(--mono)", marginTop: 2 }}>
-                {token.ticker} · Injective Spot
-              </div>
-            </div>
-          </div>
-
-          {/* Right: price */}
-          <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 28, fontWeight: 700, fontFamily: "var(--mono)", color: up ? "var(--g)" : "var(--r)" }}>
-              {fPrice(token.price)}
-            </div>
-            <div style={{ fontSize: 13, fontWeight: 600, fontFamily: "var(--mono)", color: up ? "var(--g)" : "var(--r)", marginTop: 1 }}>
-              {up ? "+" : ""}{token.priceChange24h.toFixed(2)}% (24h)
-            </div>
-          </div>
+      {error && (
+        <div style={{
+          background: "rgba(240,62,94,.08)", border: "1px solid rgba(240,62,94,.18)",
+          padding: "7px 16px", fontSize: 12, color: "var(--r)",
+          display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0,
+        }}>
+          <span>{error}</span>
+          <button onClick={fetchMarkets} className="btn-ghost" style={{ fontSize: 10, padding: "3px 10px" }}>Retry</button>
         </div>
+      )}
 
-        {/* Stats row */}
-        <div style={{ display: "flex", gap: 0, marginTop: 12, overflowX: "auto" }}>
-          {[
-            { l: "24H VOLUME",  v: fUsd(token.volume24h),  vc: "var(--t1)" },
-            { l: "LIQUIDITY",   v: fUsd(token.liquidity),   vc: "var(--t1)" },
-            { l: "MAKER FEE",   v: (parseFloat(token.makerFee) * 100).toFixed(3) + "%", vc: "var(--t2)" },
-            { l: "TAKER FEE",   v: (parseFloat(token.takerFee) * 100).toFixed(3) + "%", vc: "var(--t2)" },
-            { l: "RISK SCORE",  v: `${token.riskScore}/100`, vc: rc },
-            { l: "WHALE",       v: token.isWhaleActive ? "Detected" : "None", vc: token.isWhaleActive ? "var(--y)" : "var(--t3)" },
-          ].map((s, i, arr) => (
-            <div key={i} style={{
-              padding: "7px 16px",
-              borderRight: i < arr.length - 1 ? "1px solid var(--b1)" : "none",
-              minWidth: 100, flexShrink: 0,
-            }}>
-              <div style={{ fontSize: 9, color: "var(--t3)", letterSpacing: ".14em", fontFamily: "var(--mono)", marginBottom: 3 }}>
-                {s.l}
-              </div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: s.vc, fontFamily: "var(--mono)" }}>{s.v}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── BODY: left col (chart+tabs) + right col (risk+market) ── */}
+      {/* ── MAIN BODY ── */}
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
 
-        {/* Left: main content */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-
-          {/* Tab bar */}
-          <div style={{ display: "flex", borderBottom: "1px solid var(--b1)", flexShrink: 0, background: "var(--s1)" }}>
-            {TABS.map((t) => (
-              <button key={t.key} onClick={() => setTab(t.key)} style={{
-                padding: "10px 20px",
-                fontSize: 11, fontWeight: 500, letterSpacing: ".05em",
-                color: tab === t.key ? "#fff" : "var(--t3)",
-                background: "none", border: "none",
-                borderBottom: `2px solid ${tab === t.key ? "var(--inj)" : "transparent"}`,
-                cursor: "pointer", transition: "all .12s", fontFamily: "var(--font)",
-              }}>
-                {t.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Tab content */}
-          <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-            {tab === "chart" && (
-              <div style={{ height: "100%", minHeight: 400, display: "flex", flexDirection: "column" }}>
-                <PriceChart
-                  marketId={marketId}
-                  ticker={token.ticker}
-                  price={token.price}
-                  change24h={token.priceChange24h}
-                />
-              </div>
-            )}
-            {tab === "orderbook" && (
-              <div style={{ height: "100%", overflowY: "auto" }}>
-                <Orderbook marketId={marketId} ticker={token.ticker} />
-              </div>
-            )}
-            {tab === "trades" && (
-              <div style={{ height: "100%", overflowY: "auto" }}>
-                <TradesFeed marketId={marketId} />
-              </div>
-            )}
-            {tab === "traders" && (
-              <div style={{ height: "100%", overflowY: "auto" }}>
-                <TradersPanel traders={traders} />
-              </div>
-            )}
-          </div>
+        {/* LEFT: Token table */}
+        <div style={{ flex: 1, overflowY: "auto", borderRight: "1px solid var(--b1)" }}>
+          <TokenTable
+            tokens={tokens}
+            filter={filter}
+            search={search}
+            loading={loading}
+            selected={selected}
+            onSelect={handleSelect}
+          />
         </div>
 
-        {/* Right sidebar: risk breakdown + market info */}
-        <div className="token-sidebar" style={{
-          width: 260, flexShrink: 0,
-          borderLeft: "1px solid var(--b1)",
+        {/* RIGHT: Detail panel — hidden on mobile */}
+        <div className="right-panel" style={{
+          width: 360, flexShrink: 0,
           display: "flex", flexDirection: "column",
-          background: "var(--s1)", overflowY: "auto",
+          background: "var(--s1)", overflow: "hidden",
+          borderLeft: "1px solid var(--b1)",
         }}>
-          {/* Risk card */}
-          <div style={{ padding: "14px 14px 12px", borderBottom: "1px solid var(--b1)" }}>
-            <div style={{ fontSize: 9, color: "var(--t3)", letterSpacing: ".14em", fontFamily: "var(--mono)", marginBottom: 8 }}>
-              RISK INTELLIGENCE
-            </div>
-
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-              <div style={{ fontSize: 32, fontWeight: 800, color: rc, fontFamily: "var(--mono)" }}>
-                {token.riskScore}
-                <span style={{ fontSize: 14, opacity: 0.4, fontWeight: 400 }}>/100</span>
-              </div>
-              <span className={`bdg bdg-${rlbl.toLowerCase()}`} style={{ fontSize: 10, padding: "3px 8px" }}>
-                {rlbl} RISK
-              </span>
-            </div>
-
-            {/* Risk factors */}
-            {[
-              { l: "SPREAD",    v: Math.min(100, Math.round(token.riskScore * 0.28)) },
-              { l: "LIQUIDITY", v: Math.min(100, Math.round(token.riskScore * 0.32)) },
-              { l: "TOKEN AGE", v: Math.min(100, Math.round(token.riskScore * 0.24)) },
-              { l: "WHALE",     v: token.isWhaleActive ? 65 : 8 },
-            ].map((f, i) => (
-              <div key={i} style={{ marginBottom: 8 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-                  <span style={{ fontSize: 9, color: "var(--t3)", letterSpacing: ".1em", fontFamily: "var(--mono)" }}>{f.l}</span>
-                  <span style={{ fontSize: 9, color: riskColor(f.v), fontFamily: "var(--mono)", fontWeight: 600 }}>{f.v}</span>
-                </div>
-                <div style={{ height: 3, background: "rgba(255,255,255,.07)", borderRadius: 3, overflow: "hidden" }}>
-                  <div style={{
-                    width: `${f.v}%`, height: "100%",
-                    background: riskColor(f.v), borderRadius: 3,
-                    transition: "width .6s ease",
-                  }} />
-                </div>
-              </div>
-            ))}
-
-            <div style={{
-              marginTop: 12, padding: "8px 10px",
-              background: "var(--s3)", borderRadius: 6, border: "1px solid var(--b1)",
-              fontSize: 10, color: "var(--t3)", lineHeight: 1.6,
-            }}>
-              {rlbl === "SAFE"  && "Low spread, good liquidity, established market. Suitable for normal trading."}
-              {rlbl === "LOW"   && "Minor risk factors present. Review liquidity before large positions."}
-              {rlbl === "MED"   && "Moderate risk. Elevated spread or low liquidity detected. Trade carefully."}
-              {rlbl === "HIGH"  && "High risk detected. Thin liquidity, wide spread, or heavy whale activity. Exercise extreme caution."}
-            </div>
-          </div>
-
-          {/* Market info */}
-          <div style={{ padding: "14px" }}>
-            <div style={{ fontSize: 9, color: "var(--t3)", letterSpacing: ".14em", fontFamily: "var(--mono)", marginBottom: 10 }}>
-              MARKET INFO
-            </div>
-            {[
-              { l: "STATUS",     v: token.marketStatus.toUpperCase(), vc: "var(--g)" },
-              { l: "BASE",       v: token.baseSymbol,   vc: "var(--t1)" },
-              { l: "QUOTE",      v: token.quoteSymbol,  vc: "var(--t1)" },
-              { l: "MAKER FEE",  v: (parseFloat(token.makerFee) * 100).toFixed(3) + "%", vc: "var(--t2)" },
-              { l: "TAKER FEE",  v: (parseFloat(token.takerFee) * 100).toFixed(3) + "%", vc: "var(--t2)" },
-            ].map((s, i) => (
-              <div key={i} style={{
-                display: "flex", justifyContent: "space-between", alignItems: "center",
-                padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,.03)",
-              }}>
-                <span style={{ fontSize: 10, color: "var(--t3)", fontFamily: "var(--mono)" }}>{s.l}</span>
-                <span style={{ fontSize: 11, color: s.vc, fontFamily: "var(--mono)", fontWeight: 500 }}>{s.v}</span>
-              </div>
-            ))}
-
-            {/* Market ID */}
-            <div style={{ marginTop: 12 }}>
-              <div style={{ fontSize: 9, color: "var(--t3)", letterSpacing: ".1em", fontFamily: "var(--mono)", marginBottom: 4 }}>
-                MARKET ID
-              </div>
+          {token ? (
+            <>
+              {/* Token hero */}
               <div style={{
-                fontSize: 10, color: "var(--t3)", fontFamily: "var(--mono)",
-                wordBreak: "break-all", lineHeight: 1.5,
-                background: "var(--s2)", borderRadius: 5, padding: "6px 8px",
-                border: "1px solid var(--b1)",
+                padding: "14px 14px 12px",
+                borderBottom: "1px solid var(--b1)", flexShrink: 0,
               }}>
-                {marketId}
-              </div>
-              <button
-                onClick={() => navigator.clipboard.writeText(marketId)}
-                className="btn-ghost"
-                style={{ fontSize: 9, padding: "3px 10px", marginTop: 6, width: "100%" }}
-              >
-                Copy Market ID
-              </button>
-            </div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                    {(() => {
+                      const col = tokenColor(token.baseSymbol)
+                      return (
+                        <div style={{
+                          width: 36, height: 36, borderRadius: 9,
+                          background: `${col}20`, color: col, border: `1.5px solid ${col}40`,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 14, fontWeight: 800, flexShrink: 0,
+                        }}>{token.baseSymbol[0]}</div>
+                      )
+                    })()}
+                    <div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", display: "flex", alignItems: "center", gap: 5 }}>
+                        {token.baseSymbol}
+                        {token.isNew         && <span className="bdg bdg-new">NEW</span>}
+                        {token.isWhaleActive && <span className="bdg bdg-whale">WHALE</span>}
+                        {token.isTrending    && <span className="bdg bdg-hot">HOT</span>}
+                      </div>
+                      <div style={{ fontSize: 10, color: "var(--t3)", fontFamily: "var(--mono)", marginTop: 1 }}>{token.ticker}</div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => router.push(`/token/${encodeURIComponent(selected)}`)}
+                    className="btn-ghost"
+                    style={{ fontSize: 9, padding: "3px 9px" }}
+                  >
+                    Full page
+                  </button>
+                </div>
 
-            {/* Injective Explorer link */}
-            <a
-              href={`https://explorer.injective.network/spot/${marketId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: "block", marginTop: 8,
-                textAlign: "center", padding: "7px",
-                background: "var(--inj-dim)", border: "1px solid var(--inj-bdr)",
-                borderRadius: 6, color: "var(--inj-light)",
-                fontSize: 10, textDecoration: "none", fontFamily: "var(--mono)",
-                letterSpacing: ".05em", transition: "opacity .12s",
-              }}
-            >
-              View on Explorer
-            </a>
-          </div>
+                {/* Price */}
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{
+                    fontSize: 22, fontWeight: 700, fontFamily: "var(--mono)",
+                    color: token.priceChange24h >= 0 ? "var(--g)" : "var(--r)",
+                  }}>
+                    {fPrice(token.price)}
+                  </div>
+                  <div style={{
+                    fontSize: 12, fontWeight: 600, fontFamily: "var(--mono)",
+                    color: token.priceChange24h >= 0 ? "var(--g)" : "var(--r)", marginTop: 2,
+                  }}>
+                    {token.priceChange24h >= 0 ? "+" : ""}{token.priceChange24h.toFixed(2)}% (24h)
+                  </div>
+                </div>
+
+                {/* Mini stats */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                  {[
+                    { l: "24H VOLUME",  v: fUsd(token.volume24h) },
+                    { l: "LIQUIDITY",   v: fUsd(token.liquidity) },
+                    {
+                      l: "RISK",
+                      v: <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: riskColor(token.riskScore) }}>{token.riskScore}</span>
+                          <span className={`bdg bdg-${(token.riskScore >= 75 ? "high" : token.riskScore >= 50 ? "med" : token.riskScore >= 25 ? "low" : "safe")}`}>
+                            {token.riskScore >= 75 ? "HIGH" : token.riskScore >= 50 ? "MED" : token.riskScore >= 25 ? "LOW" : "SAFE"}
+                          </span>
+                        </span>,
+                    },
+                    { l: "WHALE",  v: token.isWhaleActive ? "Detected" : "None",
+                      vc: token.isWhaleActive ? "var(--y)" : "var(--t3)" },
+                  ].map((s, i) => (
+                    <div key={i} style={{
+                      background: "var(--s2)", border: "1px solid var(--b1)",
+                      borderRadius: 7, padding: "7px 10px",
+                    }}>
+                      <div style={{ fontSize: 9, color: "var(--t3)", letterSpacing: ".13em", fontFamily: "var(--mono)", marginBottom: 3 }}>{s.l}</div>
+                      {typeof s.v === "string"
+                        ? <div style={{ fontSize: 13, fontWeight: 600, color: (s as any).vc ?? "var(--t1)" }}>{s.v}</div>
+                        : <div style={{ marginTop: 2 }}>{s.v}</div>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tabs */}
+              <div style={{ display: "flex", borderBottom: "1px solid var(--b1)", flexShrink: 0 }}>
+                {([
+                  { key: "orderbook", label: "Orderbook" },
+                  { key: "trades",    label: "Trades" },
+                  { key: "traders",   label: "Traders" },
+                  { key: "bubbles",   label: "Bubble Map" },
+                ] as { key: RightTab; label: string }[]).map((t) => (
+                  <button key={t.key} onClick={() => setTab(t.key)} style={{
+                    flex: 1, padding: "9px 0",
+                    fontSize: 10, fontWeight: 500, letterSpacing: ".04em",
+                    color: tab === t.key ? "#fff" : "var(--t3)",
+                    background: "none", border: "none",
+                    borderBottom: `2px solid ${tab === t.key ? "var(--inj)" : "transparent"}`,
+                    cursor: "pointer", transition: "all .12s", fontFamily: "var(--font)",
+                  }}>
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Tab content */}
+              <div style={{ flex: 1, overflowY: "auto" }}>
+                {tab === "orderbook" && <Orderbook marketId={selected} ticker={token.ticker} />}
+                {tab === "trades"    && <TradesFeed marketId={selected} />}
+                {tab === "traders"   && <TradersPanel traders={traders} />}
+                {tab === "bubbles"   && (
+                  <div style={{ height: "100%", position: "relative" }}>
+                    <BubbleMap tokens={visibleTokens} selected={selected} onSelect={(id) => setSelected(id)} />
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div style={{
+              flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
+              color: "var(--t3)", fontSize: 12,
+            }}>
+              Select a token to view details
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Mobile: hide sidebar */}
+      {/* Status bar */}
+      <div style={{
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        padding: "4px 14px", flexShrink: 0,
+        background: "var(--s1)", borderTop: "1px solid var(--b1)",
+        fontSize: 10, color: "var(--t3)", fontFamily: "var(--mono)",
+      }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <span className="live-dot" style={{ width: 5, height: 5 }} />
+            {loading ? "Loading markets…" : `${tokens.length} markets · Injective Mainnet`}
+          </span>
+          <span>· Auto-refresh 30s</span>
+        </div>
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          {lastUpd && <span>Updated {lastUpd.toLocaleTimeString()}</span>}
+          <button onClick={fetchMarkets} style={{
+            background: "none", border: "none", color: "var(--inj-light)",
+            fontSize: 10, cursor: "pointer", fontFamily: "var(--mono)",
+          }}>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile: hide right panel, clicking navigates to full page */}
       <style>{`
-        @media (max-width: 768px) {
-          .token-sidebar { display: none !important; }
+        @media (max-width: 1023px) {
+          .right-panel { display: none !important; }
         }
       `}</style>
     </div>
   )
 }
 
-// ── TRADERS PANEL ─────────────────────────────────────────────
+// ── TRADERS PANEL ──────────────────────────────────────────────────────────
 function TradersPanel({ traders }: { traders: TraderStats[] }) {
   if (!traders.length) return (
-    <div style={{ padding: 40, textAlign: "center", color: "var(--t3)", fontSize: 12 }}>
-      No trader data available yet
+    <div style={{ padding: 24, textAlign: "center", color: "var(--t3)", fontSize: 12 }}>
+      Loading traders…
     </div>
   )
   return (
     <div>
       <div style={{
-        display: "grid", gridTemplateColumns: "28px 1fr 80px 56px 56px",
-        padding: "8px 16px", fontSize: 9, color: "var(--t3)",
+        display: "grid", gridTemplateColumns: "22px 1fr 68px 48px",
+        padding: "6px 12px", fontSize: 9, color: "var(--t3)",
         letterSpacing: ".12em", borderBottom: "1px solid var(--b1)", fontFamily: "var(--mono)",
       }}>
         <span>#</span><span>WALLET</span>
         <span style={{ textAlign: "right" }}>PNL</span>
         <span style={{ textAlign: "right" }}>TRADES</span>
-        <span style={{ textAlign: "right" }}>WIN %</span>
       </div>
       {traders.map((t, i) => (
         <div key={t.walletAddress} style={{
-          display: "grid", gridTemplateColumns: "28px 1fr 80px 56px 56px",
-          padding: "9px 16px",
-          borderBottom: "1px solid rgba(255,255,255,.022)",
-          alignItems: "center",
+          display: "grid", gridTemplateColumns: "22px 1fr 68px 48px",
+          padding: "8px 12px", borderBottom: "1px solid rgba(255,255,255,.022)", alignItems: "center",
         }}>
-          <span style={{ fontSize: 11, color: "var(--t3)", fontFamily: "var(--mono)" }}>{i + 1}</span>
+          <span style={{ fontSize: 10, color: "var(--t3)", fontFamily: "var(--mono)" }}>{i + 1}</span>
           <div>
-            <div style={{ fontSize: 12, color: "var(--t1)", fontFamily: "var(--mono)" }}>
-              {fWallet(t.walletAddress)}
-            </div>
-            <div style={{ fontSize: 9, color: "var(--t3)", marginTop: 1, fontFamily: "var(--mono)" }}>
-              {t.topToken}
-            </div>
+            <div style={{ fontSize: 11, color: "var(--t1)", fontFamily: "var(--mono)" }}>{fWallet(t.walletAddress)}</div>
+            <div style={{ fontSize: 9, color: "var(--t3)", marginTop: 1, fontFamily: "var(--mono)" }}>{t.topToken} · {t.winRate}% win</div>
           </div>
           <div style={{
             textAlign: "right", fontSize: 12, fontWeight: 700, fontFamily: "var(--mono)",
@@ -412,15 +318,7 @@ function TradersPanel({ traders }: { traders: TraderStats[] }) {
           }}>
             {t.estimatedPnlUsd >= 0 ? "+" : ""}{fUsd(Math.abs(t.estimatedPnlUsd))}
           </div>
-          <div style={{ textAlign: "right", fontSize: 11, color: "var(--t2)", fontFamily: "var(--mono)" }}>
-            {t.tradeCount}
-          </div>
-          <div style={{
-            textAlign: "right", fontSize: 11, fontFamily: "var(--mono)",
-            color: t.winRate >= 60 ? "var(--g)" : t.winRate >= 40 ? "var(--y)" : "var(--r)",
-          }}>
-            {t.winRate}%
-          </div>
+          <div style={{ textAlign: "right", fontSize: 11, color: "var(--t2)", fontFamily: "var(--mono)" }}>{t.tradeCount}</div>
         </div>
       ))}
     </div>
