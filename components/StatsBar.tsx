@@ -20,10 +20,10 @@ export default function StatsBar({ tokens }: { tokens: SpectерToken[] }) {
       label: "INJ PRICE",
       val: injToken ? fPrice(injToken.price) : "—",
       sub: injToken
-        ? `${(injToken.priceChange24h ?? 0) >= 0 ? "+" : ""}${(injToken.priceChange24h ?? 0).toFixed(2)}% (24h)`
+        ? `${injToken.priceChange24h >= 0 ? "+" : ""}${injToken.priceChange24h.toFixed(2)}% (24h)`
         : "loading",
       subc: injToken
-        ? (injToken.priceChange24h ?? 0) >= 0 ? "var(--g)" : "var(--r)"
+        ? injToken.priceChange24h >= 0 ? "var(--g)" : "var(--r)"
         : "var(--t3)",
     },
   ]

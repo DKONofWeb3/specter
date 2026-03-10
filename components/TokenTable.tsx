@@ -166,7 +166,7 @@ export default function TokenTable({ tokens, filter, search, loading, selected, 
                 {fPrice(t.price)}
               </td>
               <td style={{ fontSize: 12, fontWeight: 600, color: up ? "var(--g)" : "var(--r)", fontFamily: "var(--mono)" }}>
-                {up ? "+" : ""}{(t.priceChange24h ?? 0).toFixed(2)}%
+                {up ? "+" : ""}{t.priceChange24h.toFixed(2)}%
               </td>
               <td style={{ fontSize: 12, color: "var(--t2)", fontFamily: "var(--mono)" }}>{fUsd(t.volume24h)}</td>
               <td style={{ fontSize: 12, color: "var(--t2)", fontFamily: "var(--mono)" }}>{fUsd(t.liquidity)}</td>

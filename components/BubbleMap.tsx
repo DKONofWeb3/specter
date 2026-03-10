@@ -122,7 +122,7 @@ export default function BubbleMap({ tokens, selected, onSelect }: Props) {
         .attr("font-family", "Geist Mono, monospace")
         .attr("font-weight", "500")
         .attr("font-size", (d: any) => Math.min(d.r * 0.2, 11))
-        .text((d: any) => `${(d.priceChange24h ?? 0) >= 0 ? "+" : ""}${(d.priceChange24h ?? 0).toFixed(2)}%`)
+        .text((d: any) => `${d.priceChange24h >= 0 ? "+" : ""}${d.priceChange24h.toFixed(2)}%`)
 
       sim.on("tick", () => {
         g.attr("transform", (d: any) => {

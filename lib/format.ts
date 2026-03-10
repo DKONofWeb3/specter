@@ -28,8 +28,9 @@ export function fPrice(price: number): string {
  * e.g. 3.241 → "+3.24%", -0.5 → "-0.50%"
  */
 export function fPct(pct: number): string {
-  const sign = pct >= 0 ? "+" : ""
-  return `${sign}${pct.toFixed(2)}%`
+  const safe = pct ?? 0
+  const sign = safe >= 0 ? "+" : ""
+  return `${sign}${safe.toFixed(2)}%`
 }
 
 /**
@@ -58,6 +59,7 @@ export function fUsd(amount: number): string {
  * e.g. 1234567.89 → "$1,234,567.89"
  */
 export function fUsdFull(amount: number): string {
+  if (!amount) return "$0.00"
   return amount.toLocaleString("en-US", {
     style: "currency",
     currency: "USD",
@@ -72,6 +74,7 @@ export function fUsdFull(amount: number): string {
  * e.g. 12345.6789 → "12,345.68"
  */
 export function fQty(qty: number): string {
+  if (!qty) return "0"
   if (qty >= 1_000_000) return (qty / 1_000_000).toFixed(2) + "M"
   if (qty >= 1_000)     return qty.toLocaleString("en-US", { maximumFractionDigits: 2 })
   if (qty >= 1)         return qty.toFixed(4)
