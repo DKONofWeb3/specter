@@ -38,7 +38,7 @@ export async function GET() {
 
     // Limit to top 50 most relevant markets to avoid timeout
     // In production you'd paginate this properly
-    const markets = rawMarkets.slice(0, 50)
+    const markets = rawMarkets.slice(0, 20)
 
     // ── Enrich each market in parallel ─────────────────────
     const enriched = await Promise.allSettled(
@@ -49,10 +49,13 @@ export async function GET() {
         const baseDecimals = market.baseToken?.decimals ?? 18
         const quoteDecimals = market.quoteToken?.decimals ?? 6
 
-        // Fetch orderbook + recent trades in parallel
+        // Fetch orderbook + recent trades in parallel (3s timeout each)
+        const withTimeout = (p: Promise<any>, ms: number) =>
+          Promise.race([p, new Promise((_, r) => setTimeout(() => r(new Error("timeout")), ms))])
+
         const [obResult, tradesResult] = await Promise.allSettled([
-          fetchOrderbook(marketId),
-          fetchTrades(marketId),
+          withTimeout(fetchOrderbook(marketId), 3000),
+          withTimeout(fetchTrades(marketId), 3000),
         ])
 
         // ── Parse orderbook ─────────────────────────────────
