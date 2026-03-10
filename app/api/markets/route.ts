@@ -86,13 +86,13 @@ export async function GET() {
           const bids = ob.buys ?? []
           const asks = ob.sells ?? []
 
-          bidDepthUsd = bids.reduce((sum, level) => {
+          bidDepthUsd = bids.reduce((sum: number, level: any) => {
             const p = normalizePrice(level.price, baseDecimals, quoteDecimals)
             const q = normalizeQuantity(level.quantity, baseDecimals)
             return sum + p * q
           }, 0)
 
-          askDepthUsd = asks.reduce((sum, level) => {
+          askDepthUsd = asks.reduce((sum: number, level: any) => {
             const p = normalizePrice(level.price, baseDecimals, quoteDecimals)
             const q = normalizeQuantity(level.quantity, baseDecimals)
             return sum + p * q
@@ -112,13 +112,13 @@ export async function GET() {
         const oneHourAgo = now - 60 * 60 * 1000
 
         if (tradesResult.status === "fulfilled") {
-          const trades = tradesResult.value
+          const trades: any[] = tradesResult.value as any[]
           const recentTrades = trades.filter(
             (t) => Number(t.executedAt) >= oneDayAgo
           )
 
           // Volume
-          volume24hUsd = recentTrades.reduce((sum, t) => {
+          volume24hUsd = recentTrades.reduce((sum: number, t: any) => {
             const p = normalizePrice(t.price, baseDecimals, quoteDecimals)
             const q = normalizeQuantity(t.quantity, baseDecimals)
             return sum + p * q
@@ -127,7 +127,7 @@ export async function GET() {
           // Price change: compare oldest 24h trade vs latest
           if (recentTrades.length >= 2) {
             const sorted = [...recentTrades].sort(
-              (a, b) => Number(a.executedAt) - Number(b.executedAt)
+              (a: any, b: any) => Number(a.executedAt) - Number(b.executedAt)
             )
             firstTradePrice = normalizePrice(
               sorted[0].price,
@@ -212,7 +212,7 @@ export async function GET() {
     const tokens: SpectерToken[] = enriched
       .filter((r) => r.status === "fulfilled")
       .map((r) => (r as PromiseFulfilledResult<SpectерToken>).value)
-      .filter((t) => t.price > 0) // discard markets with no activity
+      .filter((t) => t.marketStatus === "active") // show all active markets
 
     // Sort by 24h volume desc
     tokens.sort((a, b) => b.volume24h - a.volume24h)
