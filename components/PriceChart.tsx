@@ -117,7 +117,7 @@ export default function PriceChart({ marketId, ticker, price, change24h }: Props
         borderDownColor: "#f03e5e",
         wickUpColor:     "#00c27a",
         wickDownColor:   "#f03e5e",
-        priceLineColor:  change24h >= 0 ? "#00c27a" : "#f03e5e",
+        priceLineColor:  (change24h ?? 0) >= 0 ? "#00c27a" : "#f03e5e",
         priceLineWidth:  1,
         priceFormat:     { type: "price", precision: priceDecimals(price), minMove: minMove(price) },
       }
@@ -212,7 +212,7 @@ export default function PriceChart({ marketId, ticker, price, change24h }: Props
   }, [candles, loading]) // eslint-disable-line
 
   const display = hovered ?? (candles.length ? candles[candles.length - 1] : null)
-  const isUp    = display ? display.close >= display.open : change24h >= 0
+  const isUp    = display ? (display.close ?? 0) >= (display.open ?? 0) : (change24h ?? 0) >= 0
 
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
@@ -315,5 +315,6 @@ function minMove(p: number) {
   return 0.00000001
 }
 function fmt(val: number, ref: number) {
+  if (val == null || isNaN(val)) return "—"
   return val.toFixed(priceDecimals(ref))
 }

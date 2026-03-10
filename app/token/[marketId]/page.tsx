@@ -105,7 +105,7 @@ export default function TokenPage() {
     </div>
   )
 
-  const up  = token.priceChange24h >= 0
+  const up  = (token.priceChange24h ?? 0) >= 0
   const rc  = riskColor(token.riskScore)
   const rlbl = token.riskScore >= 75 ? "HIGH" : token.riskScore >= 50 ? "MED" : token.riskScore >= 25 ? "LOW" : "SAFE"
   const col  = tokenColor(token.baseSymbol)
